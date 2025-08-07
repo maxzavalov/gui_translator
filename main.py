@@ -1,15 +1,17 @@
 from ensurepip import bootstrap
-
+from deep_translator import GoogleTranslator
 import ttkbootstrap as ttk
 from tkinter.messagebox import showerror
 import googletrans
-from googletrans import Translator
 import pyttsx3
 import pyperclip
 
-
-translator = Translator()
 engine = pyttsx3.init()
+
+
+def _get_lang_code(lang_name):
+    lang_dict = {v: k for k, v in googletrans.LANGUAGES.items()}
+    return lang_dict.get(lang_name.lower(), "auto")
 
 
 class LanguageTranslator:
@@ -47,7 +49,8 @@ class LanguageTranslator:
         self.canvas.create_window(400, 435, window=self.speak_button)
         self.copy_button = ttk.Button(self.master, image=self.copy_icon, bootstyle='secondary', state=ttk.DISABLED)
         self.canvas.create_window(450, 435, window=self.copy_button)
-        self.translate_button = ttk.Button(self.master, text="TRANSLATE", width=20, bootstyle='primary')
+        self.translate_button = ttk.Button(self.master, text="TRANSLATE", width=20, bootstyle='primary',
+                                           command=self.translate)
         self.canvas.create_window(330, 480, window=self.translate_button)
 
     def widow_setup(self):
@@ -60,7 +63,35 @@ class LanguageTranslator:
         self.canvas = ttk.Canvas(self.master, bg="white", width=700, height=500)
         self.canvas.pack()
 
+    def translate(self):
+        try:
+            text = self.from_text_field.get("1.0", ttk.END).strip()
+            if not text:
+                return
+            src_lang = _get_lang_code(self.from_lang.get())
+            dest_lang = _get_lang_code(self.to_lang.get())
+            translated = GoogleTranslator(source=src_lang, target=dest_lang).translate(text)
+            self.to_text_field.delete("1.0", ttk.END)
+            self.to_text_field.insert("1.0", translated)
+            self.speak_button.config(state=ttk.NORMAL)
+            self.copy_button.config(state=ttk.NORMAL)
+        except Exception as e:
+            showerror("Ошибка", f"Не удалось выполнить перевод: {e}")
 
+    # def translate(self):
+    #     try:
+    #         self.source_lang = self.from_lang.get()
+    #         self.destination_lang = self.to_lang.get()
+    #         self.text = self.from_text_field.get("1.0", ttk.END)
+    #         self.translation = translator.translate(self.text, src=self.source_lang, dest=self.destination_lang)
+    #         self.to_lang.delete("1.0", ttk.END)
+    #         self.to_lang.insert("1.0", self.translation.text)
+    #         self.speak_button.configure(state=ttk.NORMAL)
+    #         self.copy_button.configure(state=ttk.NORMAL)
+    #     except TypeError as exc:
+    #         showerror(title="Invalid input", message="Make sure you have entered valid input!")
+    #     except Exception as exc:
+    #         showerror(title='Connection Error', message='Make sure you have internet connection!')
 
 
 window = ttk.Window(themename='cosmo')
