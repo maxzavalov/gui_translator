@@ -4,9 +4,9 @@ import ttkbootstrap as ttk
 from tkinter.messagebox import showerror
 import googletrans
 import pyttsx3
+from tkinter import END
 import pyperclip
 
-engine = pyttsx3.init()
 
 
 def _get_lang_code(lang_name):
@@ -17,6 +17,7 @@ def _get_lang_code(lang_name):
 class LanguageTranslator:
     def __init__(self, master):
         self.master = master
+        self.engine = pyttsx3.init()
         self.widow_setup()
         self.widgets()
         self.logo = ttk.PhotoImage(file="translate-icon.png").subsample(7, 7)  # load image
@@ -45,7 +46,7 @@ class LanguageTranslator:
         # loading icons
         self.speaker_icon = ttk.PhotoImage(file='speaker.png').subsample(5, 4)
         self.copy_icon = ttk.PhotoImage(file='copy.png').subsample(5, 4)
-        self.speak_button = ttk.Button(self.master, image=self.speaker_icon, bootstyle='secondary', state=ttk.DISABLED)
+        self.speak_button = ttk.Button(self.master, image=self.speaker_icon, bootstyle='secondary', state=ttk.DISABLED, command= self.text_to_speech)
         self.canvas.create_window(400, 435, window=self.speak_button)
         self.copy_button = ttk.Button(self.master, image=self.copy_icon, bootstyle='secondary', state=ttk.DISABLED)
         self.canvas.create_window(450, 435, window=self.copy_button)
@@ -77,6 +78,22 @@ class LanguageTranslator:
             self.copy_button.config(state=ttk.NORMAL)
         except Exception as e:
             showerror("Ошибка", f"Не удалось выполнить перевод: {e}")
+
+    def text_to_speech(self):
+        try:
+            text = self.to_text_field.get("1.0", END).strip()
+            if not text:
+                return
+            self.engine.setProperty('rate', 150)
+            voices = self.engine.getProperty('voices')
+            for voice in voices:
+                if 'russian' in voice.name.lower():
+                    self.engine.setProperty('voice', voice.id)
+                    break
+            self.engine.say(text)
+            self.engine.runAndWait()
+        except Exception as e:
+            showerror("Ошибка", f"Не удалось воспроизвести текст: {e}")
 
     # def translate(self):
     #     try:
